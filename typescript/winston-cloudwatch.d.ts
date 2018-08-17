@@ -1,45 +1,33 @@
-import * as winston from 'winston';
+declare module "winston-cloudwatch" {
+  import * as Transport from "winston-transport";
 
-import { CloudWatch, CloudWatchLogs } from 'aws-sdk';
-
-interface CloudWatchIntegration {
-  upload(aws: CloudWatchLogs, groupName: string, streamName: string, cb: ((err: Error, data: any) => void)): void;
-  getToken(aws: CloudWatchLogs, groupName: string, streamName: string, cb: ((err: Error, data: string) => void)): void;
-  ensureGroupPresent(aws: CloudWatchLogs, name: string, cb: ((err: Error, data: boolean) => void)): void;
-  getStream(aws: CloudWatchLogs, groupName: string, streamName: string, cb: ((err: Error, data: CloudWatchLogs.Types.DescribeLogStreamsResponse) => void)): void;
-  ignoreInProgress(cb: ((err: Error) => void)): void;
-}
-
-declare module "winston" {
-  
-  export type LogObject = {level: string, msg: string, meta?: any};
-
-  export interface CloudwatchTransportOptions {
-    level?: string;
-    logGroupName?: string | (() => string);
-    logStreamName?: string | (() => string);
+  interface CloudWatchTransportOptions extends Transport.TransportStreamOptions {
+    logGroupName?: string;
+    retentionInDays?: number;
+    logStreamName?: string;
     awsAccessKeyId?: string;
     awsSecretKey?: string;
     awsRegion?: string;
-    awsOptions?: CloudWatch.Types.ClientConfiguration;
-    jsonMessage?: boolean;
-    messageFormatter?: (logObject: LogObject) => string;
     proxyServer?: string;
     uploadRate?: number;
-    errorHandler?: ((err: Error) => void);
-    silent?: boolean;
+    jsonMessage?: boolean;
   }
 
-  export interface Winston {
-    add(transport: winston.TransportInstance, options?: winston.TransportOptions | CloudwatchTransportOptions, created?: boolean): winston.LoggerInstance;
+  interface CloudWatchTransportInstance extends Transport {
+    level: string;
+    name: string;
+    logGroupName?: string;
+    retentionInDays: number;
+    logStreamName?: string;
+    awsAccessKeyId?: string;
+    awsSecretKey?: string;
+    awsRegion?: string;
+    proxyServer?: string;
+    uploadRate: number;
+    new(options?: CloudWatchTransportOptions): CloudWatchTransportInstance;
   }
 
-  export interface CloudwatchTransportInstance extends winston.TransportInstance {
-    new(options?: CloudwatchTransportOptions): CloudwatchTransportInstance;
-    kthxbye(cb: (() => void)): void;
-  }
+  const CloudWatchTransport: CloudWatchTransportInstance;
 
-  export interface Transports {
-    CloudWatch: CloudwatchTransportInstance
-  }
+  export = CloudWatchTransport;
 }
